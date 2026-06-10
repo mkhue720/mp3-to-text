@@ -1,0 +1,4 @@
+# Cài thêm khi dùng WHISPER_DEVICE=cuda trên Windows
+-r requirements.txt
+nvidia-cublas-cu12>=12.4.0
+nvidia-cudnn-cu12>=9.1.0

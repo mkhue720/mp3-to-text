@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MP3 → Text | Chuyển giọng nói thành văn bản</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <main class="container">
+    <header class="hero">
+      <div class="badge">Faster Whisper · Chạy trên máy bạn</div>
+      <h1>MP3 → Text</h1>
+      <p class="subtitle">Tải file âm thanh lên, nhận bản ghi chữ và bản dịch song song — giống Google Translate.</p>
+    </header>
+
+    <section class="card upload-card">
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Khu vực thả file">
+        <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.ogg,.flac,.webm,.mp4,.mpeg,.mpga,audio/*" hidden />
+        <div class="dropzone-icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+          </svg>
+        </div>
+        <p class="dropzone-title">Kéo thả file vào đây</p>
+        <p class="dropzone-hint">hoặc <button type="button" id="browseBtn" class="link-btn">chọn file</button> · MP3, WAV, M4A… (tối đa 50MB)</p>
+        <p id="fileName" class="file-name hidden"></p>
+      </div>
+
+      <div class="options">
+        <label for="language">Ngôn ngữ audio (để trống = tự nhận diện)</label>
+        <select id="language">
+          <option value="">Tự động</option>
+          <option value="vi">Tiếng Việt</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
+
+      <button type="button" id="transcribeBtn" class="btn-primary" disabled>
+        <span class="btn-label">Bắt đầu chuyển đổi</span>
+        <span class="btn-spinner hidden" aria-hidden="true"></span>
+      </button>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="resultSection" class="card gt-card hidden">
+      <div class="gt-lang-bar">
+        <label class="gt-lang-wrap">
+          <span class="gt-lang-label">Từ</span>
+          <select id="sourceLang" class="gt-lang-select" aria-label="Ngôn ngữ nguồn">
+            <option value="auto">Phát hiện ngôn ngữ</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+
+        <button type="button" id="swapLangBtn" class="gt-swap" title="Đổi chiều dịch" aria-label="Đổi chiều dịch">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+        </button>
+
+        <label class="gt-lang-wrap">
+          <span class="gt-lang-label">Sang</span>
+          <select id="targetLang" class="gt-lang-select" aria-label="Ngôn ngữ đích">
+            <option value="en">English</option>
+            <option value="vi">Tiếng Việt</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="gt-panels">
+        <div class="gt-panel">
+          <div class="gt-panel-head">
+            <span class="gt-panel-title" id="sourcePanelTitle">Bản ghi</span>
+            <div class="gt-panel-actions">
+              <button type="button" id="copyBtn" class="btn-icon" title="Sao chép">⎘</button>
+              <button type="button" id="downloadBtn" class="btn-icon" title="Tải .txt">↓</button>
+            </div>
+          </div>
+          <textarea id="resultText" readonly rows="12" placeholder="Văn bản từ audio…"></textarea>
+        </div>
+
+        <div class="gt-panel gt-panel-target">
+          <div class="gt-panel-head">
+            <span class="gt-panel-title" id="targetPanelTitle">Bản dịch</span>
+            <div class="gt-panel-actions">
+              <span id="translateStatus" class="gt-translate-status hidden"></span>
+              <button type="button" id="copyTranslateBtn" class="btn-icon" title="Sao chép">⎘</button>
+              <button type="button" id="downloadTranslateBtn" class="btn-icon" title="Tải .txt">↓</button>
+            </div>
+          </div>
+          <textarea id="translateText" readonly rows="12" placeholder="Bản dịch hiển thị ở đây…"></textarea>
+        </div>
+      </div>
+
+      <details id="segmentsDetails" class="segments hidden">
+        <summary>Chi tiết theo thời gian</summary>
+        <ul id="segmentsList"></ul>
+      </details>
+    </section>
+
+    <footer class="footer">
+      <p>Lần đầu chạy sẽ tải model (~150MB với <code>base</code>). Dịch cần internet (Google Translate).</p>
+    </footer>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
